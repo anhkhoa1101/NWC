@@ -1,6 +1,11 @@
 # TÀI LIỆU HỆ THỐNG MẠNG – TRUNG TÂM LOGISTICS & KHO BÃI THÔNG MINH
 ### Môn: NWC204 – SU26 | Phần mềm: Cisco Packet Tracer
 
+> **📝 Cập nhật trong phiên bản này:**
+> 1. **Gộp server:** Chi nhánh A từ 3 server (Server-A1/A2/A3) → **1 server duy nhất (Server-A)** chạy đồng thời DHCP/DNS/NTP/HTTP/Email/FTP. Chi nhánh B vẫn giữ 1 server (Server-B) như cũ.
+> 2. **ACL giới hạn ping:** Thêm Extended ACL (mục **3.4**) trên Router-A và Router-B để mỗi phòng ban chỉ ping được trong nội bộ, không ping được sang phòng ban/chi nhánh khác. Các dịch vụ DHCP/DNS/HTTP/FTP/Email vẫn hoạt động bình thường.
+> 3. **Giải thích lỗi Serial DCE/DTE:** Thêm mục **3.1.2.1** giải thích lỗi thường gặp khi đi dây Serial (clock rate phải đặt đúng đầu DCE) kèm cách kiểm tra và khắc phục.
+
 ---
 
 # PHẦN 1 – BẢNG KẾT NỐI THIẾT BỊ
@@ -21,20 +26,20 @@
 | 10 | SW-A1 | PC-A1-01 → PC-A1-30 | Copper Straight-Through | FastEthernet0/2 → Fa0/31 | FastEthernet0 |
 | 11 | SW-A2 | PC-A2-01 → PC-A2-80 | Copper Straight-Through | FastEthernet0/2 → Fa0/81 | FastEthernet0 |
 | 12 | SW-A3 | PC-A3-01 → PC-A3-70 | Copper Straight-Through | FastEthernet0/2 → Fa0/71 | FastEthernet0 |
-| 13 | SW-ASRV | Server-A1 (DHCP/DNS/NTP) | Copper Straight-Through | FastEthernet0/2 | FastEthernet0 |
-| 14 | SW-ASRV | Server-A2 (HTTP/Email) | Copper Straight-Through | FastEthernet0/3 | FastEthernet0 |
-| 15 | SW-ASRV | Server-A3 (FTP) | Copper Straight-Through | FastEthernet0/4 | FastEthernet0 |
-| 16 | SW-B1 | PC-B1-01 → PC-B1-20 | Copper Straight-Through | FastEthernet0/2 → Fa0/21 | FastEthernet0 |
-| 17 | SW-B2 | PC-B2-01 → PC-B2-60 | Copper Straight-Through | FastEthernet0/2 → Fa0/61 | FastEthernet0 |
-| 18 | SW-B3 | PC-B3-01 → PC-B3-40 | Copper Straight-Through | FastEthernet0/2 → Fa0/41 | FastEthernet0 |
-| 19 | SW-BSRV | Server-B1 (DHCP CN B) | Copper Straight-Through | FastEthernet0/2 | FastEthernet0 |
-| 20 | SW-A1 | Printer-A1 | Copper Straight-Through | FastEthernet0/24 | FastEthernet0 |
-| 21 | SW-A2 | Printer-A2 | Copper Straight-Through | FastEthernet0/24 | FastEthernet0 |
-| 22 | SW-A3 | Printer-A3 | Copper Straight-Through | FastEthernet0/24 | FastEthernet0 |
-| 23 | SW-B1 | Printer-B1 | Copper Straight-Through | FastEthernet0/24 | FastEthernet0 |
-| 24 | SW-B2 | Printer-B2 | Copper Straight-Through | FastEthernet0/24 | FastEthernet0 |
+| 13 | SW-ASRV | Server-A (CORE: DHCP/DNS/NTP/HTTP/Email/FTP) | Copper Straight-Through | FastEthernet0/2 | FastEthernet0 |
+| 14 | SW-B1 | PC-B1-01 → PC-B1-20 | Copper Straight-Through | FastEthernet0/2 → Fa0/21 | FastEthernet0 |
+| 15 | SW-B2 | PC-B2-01 → PC-B2-60 | Copper Straight-Through | FastEthernet0/2 → Fa0/61 | FastEthernet0 |
+| 16 | SW-B3 | PC-B3-01 → PC-B3-40 | Copper Straight-Through | FastEthernet0/2 → Fa0/41 | FastEthernet0 |
+| 17 | SW-BSRV | Server-B (DHCP CN B) | Copper Straight-Through | FastEthernet0/2 | FastEthernet0 |
+| 18 | SW-A1 | Printer-A1 | Copper Straight-Through | FastEthernet0/24 | FastEthernet0 |
+| 19 | SW-A2 | Printer-A2 | Copper Straight-Through | FastEthernet0/24 | FastEthernet0 |
+| 20 | SW-A3 | Printer-A3 | Copper Straight-Through | FastEthernet0/24 | FastEthernet0 |
+| 21 | SW-B1 | Printer-B1 | Copper Straight-Through | FastEthernet0/24 | FastEthernet0 |
+| 22 | SW-B2 | Printer-B2 | Copper Straight-Through | FastEthernet0/24 | FastEthernet0 |
 
 > **Ghi chú:** Kết nối Router-A ↔ Router-B sử dụng cáp Serial (DCE tại Router-A với clock rate 64000).
+>
+> ⚠️ **Lưu ý quan trọng về cáp Serial DCE/DTE:** Trong Cisco Packet Tracer, cáp Serial có 2 đầu khác nhau – một đầu là **DCE** (đầu có biểu tượng đồng hồ ⏱, đóng vai trò cấp xung clock) và đầu còn lại là **DTE** (đầu nhận xung clock). Lệnh `clock rate` **chỉ được phép cấu hình trên đầu DCE**; nếu cấu hình nhầm trên đầu DTE, Router sẽ báo lỗi `"This command applies only to DCE interfaces"` và đường truyền sẽ ở trạng thái **"up/down"** (line protocol down) dù hai đầu đã `no shutdown`. Xem mục **3.1.2.1** để biết cách kiểm tra và khắc phục lỗi này.
 
 ---
 
@@ -66,18 +71,12 @@
                     ║  └────────────┘ │  └────────────┘  └────┬────┘   ║
                     ║  30 PCs+Printer │  70 PCs+Printer        │       ║
                     ║               ┌─▼──────────┐       ┌────▼──────┐ ║
-                    ║               │   SW-A2    │       │ Server-A1 │ ║
+                    ║               │   SW-A2    │       │ Server-A  │ ║
                     ║               │ Kinh doanh │       │192.168.1.66│║
                     ║               │192.168.1.128│      │ DHCP/DNS/ │ ║
-                    ║               │    /25     │       │    NTP    │ ║
-                    ║               └────────────┘       ├───────────┤ ║
-                    ║               80 PCs+Printer        │ Server-A2 │║
-                    ║                                    │192.168.1.67│║
-                    ║                                    │HTTP/Email │ ║
-                    ║                                    ├───────────┤ ║
-                    ║                                    │ Server-A3 │ ║
-                    ║                                    │192.168.1.68│║
-                    ║                                    │    FTP    │ ║
+                    ║               │    /25     │       │   NTP    │ ║
+                    ║               └────────────┘       │HTTP/Email/│ ║
+                    ║               80 PCs+Printer        │    FTP    │ ║
                     ║                                    └───────────┘ ║
                     ╚════════════════════════╦═════════════════════════╝
                                              │
@@ -107,7 +106,7 @@
                     ║  │    /27     │ │  │    /26     │  │ .192/29 │  ║
                     ║  └────────────┘ │  └────────────┘  └────┬────┘  ║
                     ║  20 PCs+Printer │  40 PCs             ┌──▼──────┐║
-                    ║               ┌─▼──────────┐          │Server-B1││
+                    ║               ┌─▼──────────┐          │Server-B ││
                     ║               │   SW-B2    │          │192.168.3│║
                     ║               │  Kho vận   │          │  .194   ││
                     ║               │192.168.3.64│          │  DHCP   ││
@@ -131,10 +130,8 @@
 | Router-B | Gi0/2 | 192.168.3.129 | 255.255.255.192 (/26) | Gateway PB Kỹ thuật – CN B |
 | Router-B | Gi0/3 | 192.168.3.193 | 255.255.255.248 (/29) | Gateway Server Farm B |
 | Router-B | Se0/0/0 | 10.0.0.2 | 255.255.255.252 (/30) | WAN link tới CN A (DTE) |
-| Server-A1 | NIC | 192.168.1.66 | 255.255.255.240 (/28) | DHCP + DNS + NTP |
-| Server-A2 | NIC | 192.168.1.67 | 255.255.255.240 (/28) | HTTP/HTTPS + Email |
-| Server-A3 | NIC | 192.168.1.68 | 255.255.255.240 (/28) | FTP |
-| Server-B1 | NIC | 192.168.3.194 | 255.255.255.248 (/29) | DHCP Chi nhánh B |
+| Server-A | NIC | 192.168.1.66 | 255.255.255.240 (/28) | 1 server duy nhất CN A: DHCP + DNS + NTP + HTTP/HTTPS + Email + FTP |
+| Server-B | NIC | 192.168.3.194 | 255.255.255.248 (/29) | 1 server duy nhất CN B: DHCP (có thể mở rộng thêm dịch vụ khác nếu cần) |
 
 ---
 
@@ -216,9 +213,42 @@ Router-A(config)# interface Serial0/0/0
 Router-A(config-if)# description WAN-Link-CNA-to-CNB
 Router-A(config-if)# ip address 10.0.0.1 255.255.255.252
 Router-A(config-if)# clock rate 64000
+Router-A(config-if)# bandwidth 64
 Router-A(config-if)# no shutdown
 Router-A(config-if)# exit
 ```
+
+### 3.1.2.1 ⚠️ Lưu ý & Khắc phục lỗi Serial DCE/DTE
+
+Đây là lỗi phổ biến nhất khi sinh viên đi dây Serial trong Packet Tracer, không liên quan đến địa chỉ IP mà liên quan đến **đầu cáp vật lý**:
+
+**Nguyên nhân lỗi:**
+- Cáp Serial trong Packet Tracer có 2 đầu khác nhau: đầu **DCE** (có ký hiệu đồng hồ, chịu trách nhiệm cấp xung clock) và đầu **DTE** (nhận xung clock từ DCE).
+- Lệnh `clock rate 64000` **chỉ chạy được trên đầu DCE**. Nếu sinh viên cắm cáp ngược (đầu DCE lại nằm ở Router-B) rồi gõ `clock rate` trên Router-A, Router sẽ trả về lỗi:
+  ```
+  Router-A(config-if)# clock rate 64000
+  This command applies only to DCE interfaces
+  ```
+- Nếu không phát hiện và không gõ `clock rate` ở đúng đầu DCE, hai Router vẫn `no shutdown` nhưng cổng Serial sẽ ở trạng thái **`Serial0/0/0 is up, line protocol is down`** — tức là không có lỗi địa chỉ IP, nhưng đường truyền không hoạt động vì thiếu xung clock đồng bộ.
+
+**Cách kiểm tra đầu nào là DCE:**
+```bash
+Router-A# show controllers serial0/0/0
+! Dòng đầu tiên sẽ hiện "DCE V.35" hoặc "DTE V.35"
+```
+
+**Cách khắc phục:**
+1. Dùng `show controllers serial0/0/0` trên cả hai Router để xác định Router nào đang giữ đầu DCE.
+2. Chỉ cấu hình `clock rate 64000` trên Router đang giữ đầu DCE (theo tài liệu này là Router-A).
+3. Trên đầu DTE (Router-B), **không** gõ `clock rate` — chỉ cần đặt IP và `no shutdown`.
+4. Kiểm tra lại trạng thái đường truyền:
+```bash
+Router-A# show ip interface brief
+! Kết quả mong đợi: Serial0/0/0  ...  up      up
+Router-A# show interfaces serial0/0/0
+! Kiểm tra dòng: Serial0/0/0 is up, line protocol is up
+```
+> Lưu ý: địa chỉ IP `10.0.0.1/30` và `10.0.0.2/30` trong tài liệu là đúng (đây là 2 host khả dụng duy nhất của mạng /30 `10.0.0.0/30`), nên lỗi giảng viên đề cập gần như chắc chắn là lỗi **xung clock DCE/DTE** ở trên, không phải lỗi đánh sai địa chỉ IP.
 
 ### 3.1.3 Cấu hình Static Routing – Router-A
 
@@ -309,7 +339,7 @@ Router-A(dhcp-config)# exit
 ### 3.1.7 DHCP Relay (IP Helper-Address) – Router-A
 
 ```bash
-! Nếu dùng Server-A1 (192.168.1.66) làm DHCP Server riêng
+! Nếu dùng Server-A (192.168.1.66) làm DHCP Server riêng
 ! Thêm helper-address trên mỗi interface của Router-A
 
 Router-A(config)# interface GigabitEthernet0/1
@@ -386,10 +416,11 @@ Router-B(config-if)# ip address 192.168.3.193 255.255.255.248
 Router-B(config-if)# no shutdown
 Router-B(config-if)# exit
 
-! Interface WAN kết nối Chi nhánh A (DTE)
+! Interface WAN kết nối Chi nhánh A (DTE – KHÔNG cấu hình clock rate ở đầu này)
 Router-B(config)# interface Serial0/0/0
 Router-B(config-if)# description WAN-Link-CNB-to-CNA
 Router-B(config-if)# ip address 10.0.0.2 255.255.255.252
+Router-B(config-if)# bandwidth 64
 Router-B(config-if)# no shutdown
 Router-B(config-if)# exit
 ```
@@ -476,9 +507,134 @@ Switch(config)# hostname SW-B1
 
 ---
 
-# PHẦN 4 – CẤU HÌNH ĐỊA CHỈ VÀ DỊCH VỤ TRÊN SERVER
+# PHẦN 3.4 – ACCESS CONTROL LIST (ACL): CHỈ CHO PHÉP PING NỘI BỘ PHÒNG BAN
 
-## 4.1 Server-A1 – DHCP + DNS + NTP (IP: 192.168.1.66/28)
+## 3.4.1 Yêu cầu
+
+Mỗi phòng ban (subnet) **chỉ được ping (ICMP) trong nội bộ phòng ban của mình**, **không được ping sang phòng ban khác** — kể cả phòng ban khác trong cùng chi nhánh hoặc phòng ban ở chi nhánh đối diện. Các dịch vụ khác (DHCP, DNS, HTTP, FTP, Email) vẫn hoạt động bình thường giữa các phòng ban vì các dịch vụ này dùng TCP/UDP, không bị ACL chặn (ACL chỉ chặn giao thức ICMP).
+
+Vì mô hình **không dùng VLAN/Switch Layer 3** (mỗi phòng ban là 1 cổng riêng trên Router), nên mọi gói tin đi giữa 2 phòng ban bắt buộc phải đi qua Router → đây chính là vị trí lý tưởng để áp **Extended ACL** chặn ICMP liên-phòng ban.
+
+## 3.4.2 ACL trên Router-A
+
+```bash
+Router-A# configure terminal
+
+! ACL áp cho PB IT/Điều hành (A1 – 192.168.1.0/26) – chặn ping đến tất cả phòng ban khác
+Router-A(config)# access-list 101 deny icmp 192.168.1.0 0.0.0.63 192.168.1.128 0.0.0.127
+Router-A(config)# access-list 101 deny icmp 192.168.1.0 0.0.0.63 192.168.2.0 0.0.0.127
+Router-A(config)# access-list 101 deny icmp 192.168.1.0 0.0.0.63 192.168.3.0 0.0.0.31
+Router-A(config)# access-list 101 deny icmp 192.168.1.0 0.0.0.63 192.168.3.64 0.0.0.63
+Router-A(config)# access-list 101 deny icmp 192.168.1.0 0.0.0.63 192.168.3.128 0.0.0.63
+Router-A(config)# access-list 101 permit ip any any
+
+! ACL áp cho PB Kinh doanh (A2 – 192.168.1.128/25)
+Router-A(config)# access-list 102 deny icmp 192.168.1.128 0.0.0.127 192.168.1.0 0.0.0.63
+Router-A(config)# access-list 102 deny icmp 192.168.1.128 0.0.0.127 192.168.2.0 0.0.0.127
+Router-A(config)# access-list 102 deny icmp 192.168.1.128 0.0.0.127 192.168.3.0 0.0.0.31
+Router-A(config)# access-list 102 deny icmp 192.168.1.128 0.0.0.127 192.168.3.64 0.0.0.63
+Router-A(config)# access-list 102 deny icmp 192.168.1.128 0.0.0.127 192.168.3.128 0.0.0.63
+Router-A(config)# access-list 102 permit ip any any
+
+! ACL áp cho PB Kho vận (A3 – 192.168.2.0/25)
+Router-A(config)# access-list 103 deny icmp 192.168.2.0 0.0.0.127 192.168.1.0 0.0.0.63
+Router-A(config)# access-list 103 deny icmp 192.168.2.0 0.0.0.127 192.168.1.128 0.0.0.127
+Router-A(config)# access-list 103 deny icmp 192.168.2.0 0.0.0.127 192.168.3.0 0.0.0.31
+Router-A(config)# access-list 103 deny icmp 192.168.2.0 0.0.0.127 192.168.3.64 0.0.0.63
+Router-A(config)# access-list 103 deny icmp 192.168.2.0 0.0.0.127 192.168.3.128 0.0.0.63
+Router-A(config)# access-list 103 permit ip any any
+
+! Áp ACL vào đúng interface — chiều "in" (gói tin từ phòng ban đi vào Router)
+Router-A(config)# interface GigabitEthernet0/0
+Router-A(config-if)# ip access-group 101 in
+Router-A(config-if)# exit
+
+Router-A(config)# interface GigabitEthernet0/1
+Router-A(config-if)# ip access-group 102 in
+Router-A(config-if)# exit
+
+Router-A(config)# interface GigabitEthernet0/2
+Router-A(config-if)# ip access-group 103 in
+Router-A(config-if)# exit
+
+Router-A(config)# end
+Router-A# write memory
+```
+
+> **Ghi chú:** Interface Gi0/3 (Server Farm A) **không** áp ACL — mọi phòng ban vẫn cần truy cập DHCP/DNS/HTTP/FTP/Email từ Server-A, và việc ping đến Server để kiểm tra kết nối vẫn được cho phép.
+
+## 3.4.3 ACL trên Router-B
+
+```bash
+Router-B# configure terminal
+
+! ACL áp cho PB IT/Điều hành (B1 – 192.168.3.0/27)
+Router-B(config)# access-list 111 deny icmp 192.168.3.0 0.0.0.31 192.168.3.64 0.0.0.63
+Router-B(config)# access-list 111 deny icmp 192.168.3.0 0.0.0.31 192.168.3.128 0.0.0.63
+Router-B(config)# access-list 111 deny icmp 192.168.3.0 0.0.0.31 192.168.1.0 0.0.0.63
+Router-B(config)# access-list 111 deny icmp 192.168.3.0 0.0.0.31 192.168.1.128 0.0.0.127
+Router-B(config)# access-list 111 deny icmp 192.168.3.0 0.0.0.31 192.168.2.0 0.0.0.127
+Router-B(config)# access-list 111 permit ip any any
+
+! ACL áp cho PB Kho vận (B2 – 192.168.3.64/26)
+Router-B(config)# access-list 112 deny icmp 192.168.3.64 0.0.0.63 192.168.3.0 0.0.0.31
+Router-B(config)# access-list 112 deny icmp 192.168.3.64 0.0.0.63 192.168.3.128 0.0.0.63
+Router-B(config)# access-list 112 deny icmp 192.168.3.64 0.0.0.63 192.168.1.0 0.0.0.63
+Router-B(config)# access-list 112 deny icmp 192.168.3.64 0.0.0.63 192.168.1.128 0.0.0.127
+Router-B(config)# access-list 112 deny icmp 192.168.3.64 0.0.0.63 192.168.2.0 0.0.0.127
+Router-B(config)# access-list 112 permit ip any any
+
+! ACL áp cho PB Kỹ thuật (B3 – 192.168.3.128/26)
+Router-B(config)# access-list 113 deny icmp 192.168.3.128 0.0.0.63 192.168.3.0 0.0.0.31
+Router-B(config)# access-list 113 deny icmp 192.168.3.128 0.0.0.63 192.168.3.64 0.0.0.63
+Router-B(config)# access-list 113 deny icmp 192.168.3.128 0.0.0.63 192.168.1.0 0.0.0.63
+Router-B(config)# access-list 113 deny icmp 192.168.3.128 0.0.0.63 192.168.1.128 0.0.0.127
+Router-B(config)# access-list 113 deny icmp 192.168.3.128 0.0.0.63 192.168.2.0 0.0.0.127
+Router-B(config)# access-list 113 permit ip any any
+
+! Áp ACL vào interface
+Router-B(config)# interface GigabitEthernet0/0
+Router-B(config-if)# ip access-group 111 in
+Router-B(config-if)# exit
+
+Router-B(config)# interface GigabitEthernet0/1
+Router-B(config-if)# ip access-group 112 in
+Router-B(config-if)# exit
+
+Router-B(config)# interface GigabitEthernet0/2
+Router-B(config-if)# ip access-group 113 in
+Router-B(config-if)# exit
+
+Router-B(config)# end
+Router-B# write memory
+```
+
+## 3.4.4 Kiểm tra ACL
+
+```bash
+! Xem nội dung ACL
+Router-A# show access-lists
+Router-A# show ip interface GigabitEthernet0/0   ! kiểm tra ACL đã gắn đúng chiều "in"
+
+! Test từ PC phòng IT (A1) – PHẢI thất bại (Request timed out)
+C:\> ping 192.168.1.130     ! PC phòng Kinh doanh (A2)
+C:\> ping 192.168.3.2       ! PC phòng IT CN B (B1)
+
+! Test từ PC phòng IT (A1) – PHẢI thành công (cùng phòng ban)
+C:\> ping 192.168.1.10      ! PC khác trong cùng PB IT
+
+! Test các dịch vụ khác vẫn hoạt động bình thường dù ping bị chặn
+C:\> ftp 192.168.1.66
+C:\> nslookup logistics.local    ! DNS vẫn phân giải (UDP, không bị chặn)
+```
+
+---
+
+
+
+## 4.1 Server-A (CORE) – 1 SERVER DUY NHẤT cho Chi nhánh A (IP: 192.168.1.66/28)
+
+> **Gộp 1 server duy nhất:** Theo yêu cầu tối ưu hóa hệ thống, toàn bộ 6 dịch vụ (DHCP, DNS, NTP, HTTP/HTTPS, Email, FTP) của Chi nhánh A được chạy trên **một server vật lý duy nhất – Server-A**, thay vì tách thành 3 server (Server-A1/A2/A3) như phương án cũ. Packet Tracer cho phép 1 server bật đồng thời nhiều dịch vụ trong tab **Services**, nên việc gộp này hoàn toàn khả thi và giúp giảm số thiết bị, số cổng switch cần dùng.
 
 ### Cấu hình địa chỉ IP tĩnh (trong Packet Tracer)
 
@@ -491,7 +647,7 @@ Switch(config)# hostname SW-B1
 
 ---
 
-### 4.1.1 Dịch vụ DHCP (Server-A1)
+### 4.1.1 Dịch vụ DHCP (Server-A)
 
 > Vào **Desktop → IP Configuration**: đặt IP tĩnh như trên.
 > Vào **Services → DHCP**: Bật **ON**
@@ -505,41 +661,41 @@ Switch(config)# hostname SW-B1
 | POOL-A3-KV | 192.168.2.1 | 192.168.1.66 | 192.168.2.6 | 121 | 255.255.255.128 |
 | POOL-ASRV | 192.168.1.65 | 192.168.1.66 | 192.168.1.69 | 10 | 255.255.255.240 |
 
-> **Lưu ý:** Exclude IP từ 192.168.1.66 → 192.168.1.68 (cho 3 server) và Gateway.
+> **Lưu ý:** Chỉ cần Exclude IP `192.168.1.66` (địa chỉ của Server-A) và các Gateway — vì giờ chỉ còn 1 server duy nhất, không cần loại trừ thêm `.67`/`.68` như trước.
 
 ---
 
-### 4.1.2 Dịch vụ DNS (Server-A1)
+### 4.1.2 Dịch vụ DNS (Server-A)
 
 > Vào **Services → DNS**: Bật **ON**
 
-**Bảng DNS Records:**
+**Bảng DNS Records:** (tất cả trỏ về cùng 1 IP `192.168.1.66` vì chỉ còn 1 server)
 
 | Tên miền nội bộ | Loại Record | Địa chỉ IP | Mô tả |
 |-----------------|-------------|------------|-------|
-| `logistics.local` | A Record | 192.168.1.67 | Web Server chính |
-| `www.logistics.local` | A Record | 192.168.1.67 | Web Server (alias) |
-| `ftp.logistics.local` | A Record | 192.168.1.68 | FTP Server |
-| `mail.logistics.local` | A Record | 192.168.1.67 | Email Server |
+| `logistics.local` | A Record | 192.168.1.66 | Web Server chính |
+| `www.logistics.local` | A Record | 192.168.1.66 | Web Server (alias) |
+| `ftp.logistics.local` | A Record | 192.168.1.66 | FTP Server |
+| `mail.logistics.local` | A Record | 192.168.1.66 | Email Server |
 | `ntp.logistics.local` | A Record | 192.168.1.66 | NTP Server |
-| `server-a1.logistics.local` | A Record | 192.168.1.66 | DHCP/DNS/NTP Server |
+| `server-a.logistics.local` | A Record | 192.168.1.66 | Server CORE (DHCP/DNS/NTP/HTTP/Email/FTP) |
 | `router-a.logistics.local` | A Record | 192.168.1.1 | Router CN A |
 | `router-b.logistics.local` | A Record | 192.168.3.1 | Router CN B |
 
 **Các bước thực hiện trong Packet Tracer:**
-1. Mở Server-A1 → tab **Services** → chọn **DNS**
+1. Mở Server-A → tab **Services** → chọn **DNS**
 2. Bật **DNS Service: ON**
 3. Nhập từng record vào ô **Name** và **Address**, chọn loại **A Record**
 4. Nhấn **Add** sau mỗi record
 
 ---
 
-### 4.1.3 Dịch vụ NTP (Server-A1)
+### 4.1.3 Dịch vụ NTP (Server-A)
 
 > Vào **Services → NTP**: Bật **ON**
 
 **Cấu hình NTP trong Packet Tracer:**
-1. Mở Server-A1 → tab **Services** → chọn **NTP**
+1. Mở Server-A → tab **Services** → chọn **NTP**
 2. Bật **NTP Service: ON**
 3. Đặt thời gian chính xác (ngày/giờ hiện tại)
 
@@ -572,25 +728,12 @@ Router-B# show ntp associations
 
 ---
 
-## 4.2 Server-A2 – HTTP/HTTPS + Email (IP: 192.168.1.67/28)
-
-### Cấu hình địa chỉ IP tĩnh
-
-| Thông số | Giá trị |
-|----------|---------|
-| IP Address | 192.168.1.67 |
-| Subnet Mask | 255.255.255.240 |
-| Default Gateway | 192.168.1.65 |
-| DNS Server | 192.168.1.66 |
-
----
-
-### 4.2.1 Dịch vụ HTTP/HTTPS (Server-A2)
+### 4.1.4 Dịch vụ HTTP/HTTPS (Server-A)
 
 > Vào **Services → HTTP**: Bật **HTTP ON** và **HTTPS ON**
 
 **Cấu hình trong Packet Tracer:**
-1. Mở Server-A2 → tab **Services** → chọn **HTTP**
+1. Mở Server-A → tab **Services** → chọn **HTTP**
 2. Bật **HTTP Service: ON**
 3. Bật **HTTPS Service: ON**
 4. Chỉnh sửa file `index.html` mặc định với nội dung tùy chỉnh:
@@ -614,17 +757,17 @@ Router-B# show ntp associations
 ```
 
 **Kiểm tra từ PC bất kỳ:**
-- Mở Web Browser → nhập `http://logistics.local` hoặc `http://192.168.1.67`
+- Mở Web Browser → nhập `http://logistics.local` hoặc `http://192.168.1.66`
 - Kết quả mong đợi: Trang web nội bộ hiển thị
 
 ---
 
-### 4.2.2 Dịch vụ Email – SMTP + POP3 (Server-A2)
+### 4.1.5 Dịch vụ Email – SMTP + POP3 (Server-A)
 
 > Vào **Services → EMAIL**: Bật **SMTP ON** và **POP3 ON**
 
 **Cấu hình Email Server:**
-1. Mở Server-A2 → tab **Services** → chọn **EMAIL**
+1. Mở Server-A → tab **Services** → chọn **EMAIL**
 2. Bật **SMTP Service: ON**
 3. Bật **POP3 Service: ON**
 4. Nhập **Domain Name:** `logistics.local`
@@ -641,32 +784,19 @@ Router-B# show ntp associations
 - Mở PC → tab **Desktop** → chọn **Email**
 - **Your Name:** Tên người dùng
 - **Email Address:** `username@logistics.local`
-- **Incoming Mail Server (POP3):** `192.168.1.67` hoặc `mail.logistics.local`
-- **Outgoing Mail Server (SMTP):** `192.168.1.67` hoặc `mail.logistics.local`
+- **Incoming Mail Server (POP3):** `192.168.1.66` hoặc `mail.logistics.local`
+- **Outgoing Mail Server (SMTP):** `192.168.1.66` hoặc `mail.logistics.local`
 - **User Name:** tên đăng nhập
 - **Password:** mật khẩu tương ứng
 
 ---
 
-## 4.3 Server-A3 – FTP (IP: 192.168.1.68/28)
-
-### Cấu hình địa chỉ IP tĩnh
-
-| Thông số | Giá trị |
-|----------|---------|
-| IP Address | 192.168.1.68 |
-| Subnet Mask | 255.255.255.240 |
-| Default Gateway | 192.168.1.65 |
-| DNS Server | 192.168.1.66 |
-
----
-
-### 4.3.1 Dịch vụ FTP (Server-A3)
+### 4.1.6 Dịch vụ FTP (Server-A)
 
 > Vào **Services → FTP**: Bật **ON**
 
 **Cấu hình FTP Server trong Packet Tracer:**
-1. Mở Server-A3 → tab **Services** → chọn **FTP**
+1. Mở Server-A → tab **Services** → chọn **FTP**
 2. Bật **FTP Service: ON**
 3. Tạo tài khoản FTP:
 
@@ -682,7 +812,7 @@ Router-B# show ntp associations
 
 ```bash
 ! Mở PC → Desktop → Command Prompt
-ftp 192.168.1.68
+ftp 192.168.1.66
 ! hoặc
 ftp ftp.logistics.local
 
@@ -699,7 +829,8 @@ ftp> quit         ! Thoát
 
 ---
 
-## 4.4 Server-B1 – DHCP Chi nhánh B (IP: 192.168.3.194/29)
+
+## 4.2 Server-B – 1 SERVER DUY NHẤT cho Chi nhánh B – DHCP (IP: 192.168.3.194/29)
 
 ### Cấu hình địa chỉ IP tĩnh
 
@@ -712,7 +843,7 @@ ftp> quit         ! Thoát
 
 ---
 
-### 4.4.1 Dịch vụ DHCP – Server-B1 (Dành cho Chi nhánh B)
+### 4.2.1 Dịch vụ DHCP – Server-B (Dành cho Chi nhánh B)
 
 > Vào **Services → DHCP**: Bật **ON**
 
@@ -766,20 +897,18 @@ Router-B# write memory
 
 ---
 
-## 4.5 Tóm tắt Dịch vụ trên từng Thiết bị
+## 4.3 Tóm tắt Dịch vụ trên từng Thiết bị
 
 | Thiết bị | IP | DHCP | DNS | HTTP/HTTPS | FTP | Email | SSH | NTP |
 |----------|-----|------|-----|-----------|-----|-------|-----|-----|
 | Router-A | 10.0.0.1 / 192.168.x.x | ✅ Server | – | – | – | – | ✅ | ✅ Master |
 | Router-B | 10.0.0.2 / 192.168.x.x | ✅ Server | – | – | – | – | ✅ | ✅ Client |
-| Server-A1 | 192.168.1.66 | ✅ | ✅ | – | – | – | – | ✅ |
-| Server-A2 | 192.168.1.67 | – | – | ✅ | – | ✅ SMTP/POP3 | – | – |
-| Server-A3 | 192.168.1.68 | – | – | – | ✅ | – | – | – |
-| Server-B1 | 192.168.3.194 | ✅ (CN B) | – | – | – | – | – | – |
+| Server-A | 192.168.1.66 | ✅ | ✅ | ✅ | ✅ | ✅ SMTP/POP3 | – | ✅ |
+| Server-B | 192.168.3.194 | ✅ (CN B) | – | – | – | – | – | – |
 
 ---
 
-## 4.6 Kiểm tra và Xác nhận Dịch vụ
+## 4.4 Kiểm tra và Xác nhận Dịch vụ
 
 ### Lệnh kiểm tra toàn hệ thống
 
@@ -803,7 +932,7 @@ nslookup logistics.local
 ! ===== Kiểm tra FTP =====
 ! Từ PC: Desktop → Command Prompt
 ftp ftp.logistics.local
-! Hoặc: ftp 192.168.1.68
+! Hoặc: ftp 192.168.1.66
 
 ! ===== Kiểm tra Email =====
 ! Từ PC: Desktop → Email → gửi thử tới admin@logistics.local
