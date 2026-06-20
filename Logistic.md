@@ -53,7 +53,7 @@
                     ║                                                  ║
                     ║            ┌─────────────────────┐               ║
                     ║            │      ROUTER-A        │              ║
-                    ║            │  Se0/0/0: 10.0.0.1   │              ║
+                    ║            │  Se0/0/0: 203.0.113.1│              ║
                     ║            │  Gi0/0: 192.168.1.1  │              ║
                     ║            │  Gi0/1: 192.168.1.129│              ║
                     ║            │  Gi0/2: 192.168.2.1  │              ║
@@ -81,15 +81,15 @@
                     ╚════════════════════════╦═════════════════════════╝
                                              │
                                    Serial WAN Link
-                                   10.0.0.0/30
-                                 (DCE) 10.0.0.1 ◄─► 10.0.0.2 (DTE)
+                                   203.0.113.0/30
+                                 (DCE) 203.0.113.1 ◄─► 203.0.113.2 (DTE)
                                              │
                     ╔════════════════════════╩═════════════════════════╗
                     ║       CHI NHÁNH B – KHO VỆ TINH                 ║
                     ║                                                  ║
                     ║            ┌─────────────────────┐              ║
                     ║            │      ROUTER-B        │              ║
-                    ║            │  Se0/0/0: 10.0.0.2   │              ║
+                    ║            │  Se0/0/0: 203.0.113.2│              ║
                     ║            │  Gi0/0: 192.168.3.1  │              ║
                     ║            │  Gi0/1: 192.168.3.65 │              ║
                     ║            │  Gi0/2: 192.168.3.129│              ║
@@ -124,12 +124,12 @@
 | Router-A | Gi0/1 | 192.168.1.129 | 255.255.255.128 (/25) | Gateway PB Kinh doanh – CN A |
 | Router-A | Gi0/2 | 192.168.2.1 | 255.255.255.128 (/25) | Gateway PB Kho vận – CN A |
 | Router-A | Gi0/3 | 192.168.1.65 | 255.255.255.240 (/28) | Gateway Server Farm A |
-| Router-A | Se0/0/0 | 10.0.0.1 | 255.255.255.252 (/30) | WAN link tới CN B (DCE) |
+| Router-A | Se0/0/0 | 203.0.113.1 | 255.255.255.252 (/30) | WAN link tới CN B (DCE) |
 | Router-B | Gi0/0 | 192.168.3.1 | 255.255.255.224 (/27) | Gateway PB IT – CN B |
 | Router-B | Gi0/1 | 192.168.3.65 | 255.255.255.192 (/26) | Gateway PB Kho vận – CN B |
 | Router-B | Gi0/2 | 192.168.3.129 | 255.255.255.192 (/26) | Gateway PB Kỹ thuật – CN B |
 | Router-B | Gi0/3 | 192.168.3.193 | 255.255.255.248 (/29) | Gateway Server Farm B |
-| Router-B | Se0/0/0 | 10.0.0.2 | 255.255.255.252 (/30) | WAN link tới CN A (DTE) |
+| Router-B | Se0/0/0 | 203.0.113.2 | 255.255.255.252 (/30) | WAN link tới CN A (DTE) |
 | Server-A | NIC | 192.168.1.66 | 255.255.255.240 (/28) | 1 server duy nhất CN A: DHCP + DNS + NTP + HTTP/HTTPS + Email + FTP |
 | Server-B | NIC | 192.168.3.194 | 255.255.255.248 (/29) | 1 server duy nhất CN B: DHCP (có thể mở rộng thêm dịch vụ khác nếu cần) |
 
@@ -211,7 +211,7 @@ Router-A(config-if)# exit
 ! Interface WAN kết nối Chi nhánh B (DCE – cấp clock)
 Router-A(config)# interface Serial0/0/0
 Router-A(config-if)# description WAN-Link-CNA-to-CNB
-Router-A(config-if)# ip address 10.0.0.1 255.255.255.252
+Router-A(config-if)# ip address 203.0.113.1 255.255.255.252
 Router-A(config-if)# clock rate 64000
 Router-A(config-if)# bandwidth 64
 Router-A(config-if)# no shutdown
@@ -248,16 +248,16 @@ Router-A# show ip interface brief
 Router-A# show interfaces serial0/0/0
 ! Kiểm tra dòng: Serial0/0/0 is up, line protocol is up
 ```
-> Lưu ý: địa chỉ IP `10.0.0.1/30` và `10.0.0.2/30` trong tài liệu là đúng (đây là 2 host khả dụng duy nhất của mạng /30 `10.0.0.0/30`), nên lỗi giảng viên đề cập gần như chắc chắn là lỗi **xung clock DCE/DTE** ở trên, không phải lỗi đánh sai địa chỉ IP.
+> Lưu ý: địa chỉ IP `203.0.113.1/30` và `203.0.113.2/30` trong tài liệu là đúng (đây là 2 host khả dụng duy nhất của mạng /30 `203.0.113.0/30`), nên lỗi giảng viên đề cập gần như chắc chắn là lỗi **xung clock DCE/DTE** ở trên, không phải lỗi đánh sai địa chỉ IP.
 
 ### 3.1.3 Cấu hình Static Routing – Router-A
 
 ```bash
 ! Static route tới tất cả subnet Chi nhánh B
-Router-A(config)# ip route 192.168.3.0 255.255.255.224 10.0.0.2
-Router-A(config)# ip route 192.168.3.64 255.255.255.192 10.0.0.2
-Router-A(config)# ip route 192.168.3.128 255.255.255.192 10.0.0.2
-Router-A(config)# ip route 192.168.3.192 255.255.255.248 10.0.0.2
+Router-A(config)# ip route 192.168.3.0 255.255.255.224 203.0.113.2
+Router-A(config)# ip route 192.168.3.64 255.255.255.192 203.0.113.2
+Router-A(config)# ip route 192.168.3.128 255.255.255.192 203.0.113.2
+Router-A(config)# ip route 192.168.3.192 255.255.255.248 203.0.113.2
 
 Router-A(config)# end
 Router-A# write memory
@@ -419,7 +419,7 @@ Router-B(config-if)# exit
 ! Interface WAN kết nối Chi nhánh A (DTE – KHÔNG cấu hình clock rate ở đầu này)
 Router-B(config)# interface Serial0/0/0
 Router-B(config-if)# description WAN-Link-CNB-to-CNA
-Router-B(config-if)# ip address 10.0.0.2 255.255.255.252
+Router-B(config-if)# ip address 203.0.113.2 255.255.255.252
 Router-B(config-if)# bandwidth 64
 Router-B(config-if)# no shutdown
 Router-B(config-if)# exit
@@ -429,10 +429,10 @@ Router-B(config-if)# exit
 
 ```bash
 ! Static route tới tất cả subnet Chi nhánh A
-Router-B(config)# ip route 192.168.1.0 255.255.255.192 10.0.0.1
-Router-B(config)# ip route 192.168.1.64 255.255.255.240 10.0.0.1
-Router-B(config)# ip route 192.168.1.128 255.255.255.128 10.0.0.1
-Router-B(config)# ip route 192.168.2.0 255.255.255.128 10.0.0.1
+Router-B(config)# ip route 192.168.1.0 255.255.255.192 203.0.113.1
+Router-B(config)# ip route 192.168.1.64 255.255.255.240 203.0.113.1
+Router-B(config)# ip route 192.168.1.128 255.255.255.128 203.0.113.1
+Router-B(config)# ip route 192.168.2.0 255.255.255.128 203.0.113.1
 
 Router-B(config)# end
 Router-B# write memory
@@ -460,7 +460,7 @@ Router-B(config-line)# exit
 
 ```bash
 ! Router-B đồng bộ thời gian từ Router-A qua WAN
-Router-B(config)# ntp server 10.0.0.1
+Router-B(config)# ntp server 203.0.113.1
 ```
 
 ---
@@ -714,7 +714,7 @@ Router-A(config)# clock timezone ICT 7
 
 ```bash
 ! Router-B đồng bộ từ Router-A
-Router-B(config)# ntp server 10.0.0.1
+Router-B(config)# ntp server 203.0.113.1
 Router-B(config)# clock timezone ICT 7
 ```
 
@@ -901,8 +901,8 @@ Router-B# write memory
 
 | Thiết bị | IP | DHCP | DNS | HTTP/HTTPS | FTP | Email | SSH | NTP |
 |----------|-----|------|-----|-----------|-----|-------|-----|-----|
-| Router-A | 10.0.0.1 / 192.168.x.x | ✅ Server | – | – | – | – | ✅ | ✅ Master |
-| Router-B | 10.0.0.2 / 192.168.x.x | ✅ Server | – | – | – | – | ✅ | ✅ Client |
+| Router-A | 203.0.113.1 / 192.168.x.x | ✅ Server | – | – | – | – | ✅ | ✅ Master |
+| Router-B | 203.0.113.2 / 192.168.x.x | ✅ Server | – | – | – | – | ✅ | ✅ Client |
 | Server-A | 192.168.1.66 | ✅ | ✅ | ✅ | ✅ | ✅ SMTP/POP3 | – | ✅ |
 | Server-B | 192.168.3.194 | ✅ (CN B) | – | – | – | – | – | – |
 
@@ -950,7 +950,7 @@ Router-B# show ntp associations
 Router-B# show clock
 
 ! ===== Kiểm tra kết nối liên chi nhánh =====
-Router-A# ping 10.0.0.2
+Router-A# ping 203.0.113.2
 Router-A# ping 192.168.3.1
 Router-A# ping 192.168.3.65
 Router-A# ping 192.168.3.194
@@ -986,7 +986,7 @@ Router-B# show ip route
 
 | Liên kết | Mask | Network | Router-A | Router-B | Broadcast |
 |----------|------|---------|---------|---------|-----------|
-| WAN A–B | /30 | 10.0.0.0 | 10.0.0.1 (DCE) | 10.0.0.2 (DTE) | 10.0.0.3 |
+| WAN A–B | /30 | 203.0.113.0 | 203.0.113.1 (DCE) | 203.0.113.2 (DTE) | 203.0.113.3 |
 
 ---
 
